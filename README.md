@@ -8,8 +8,8 @@ to require its own repo I'll do so.
 Features
 --------
 
-- Icinga compatible
-- Use interface descriptions as your flag of what to care about
+- Network automation.
+- JunOS NETCONF.
 
 Installation
 ------------
@@ -28,6 +28,8 @@ Support
 
 I am not providing support for these tools and are to be used at your
 own risk. I can be reached at kris@puppetlabs.com.
+
+I will review PRs if you wish to contribute.
 
 License
 -------
