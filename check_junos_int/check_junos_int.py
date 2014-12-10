@@ -2,8 +2,7 @@
 # -*- encoding: utf-8 -*-
 #
 # Copyright 2014 Puppet Labs, Inc.
-
-##
+#
 # check_junos_int
 #
 # The goal with this check script is to care about interfaces with
@@ -15,7 +14,6 @@
 # Requirements:
 #   * py-junos-eznc module
 #   * Enabling the NETCONF protocol on JunOS devices.
-#
 
 __author__ = "Kris Amundson"
 __copyright__ = "Copyright (C) 2014 Puppet Labs, Inc."
@@ -29,35 +27,30 @@ import re
 
 def main():
 
-    # Process arguments
     args = process_args()
-
-    # Ignore interface descriptions that match this regex
-    # Currently: Ignore descriptions that start with an underscore
-    ignore_interface = re.compile(r'^_.*$')
-
-    # Connect to device, get port table, close device
     interfaces = get_interfaces(args) 
+    down_interfaces = check_interfaces(interfaces)
 
-    # Iterate over interfaces
-    #  - If Admin state is "up" and Operational Link is "down"
-    #  - Description is not None 
-    #  - Descriptions that do not match the ignore regex
-    #  - Build an array of these interfaces
-    down_interfaces = []
-    for interface in interfaces.items():
-        if interface[1][4][1] == 'up' and interface[1][0][1] == 'up': 
-            if interface[1][2][1] == None or ignore_interface.match(interface[1][2][1]):
-                continue
-            else:
-                down_interfaces.append(interface[0])
-
-    print down_interfaces
+    if down_interfaces:    
+        errout = ''
+        for each in down_interfaces:
+            errout = errout + each + ' '
+        print('CRITICAL: ' + errout)
+        exit(2)
+        
+    else:
+        print('OK: Interfaces are up.') 
+        exit(0)
 
 def process_args():
+    """
+    Process command arguments.
+    Return friendly dict of arguments.
+    """
+
     parser = argparse.ArgumentParser(description='Check interface states on JunOS device.')
     parser.add_argument('--configfile', help='Alternate SSH user config.', required=False, type=str)
-    parser.add_argument('--hostname', help='Device FQDN hostname.', required=True, type=str)
+    parser.add_argument('--hostname', help='Device hostname.', required=True, type=str)
     parser.add_argument('--user', help='SSH login name.', required=False, type=str)
 
     args = parser.parse_args()
@@ -66,6 +59,11 @@ def process_args():
     return { 'user': args.user, 'hostname': args.hostname, 'configfile': args.configfile }
 
 def get_interfaces(args):
+    """
+    Connect to device over NETCONF protocol and obtain list of interfaces.
+    This uses jnpr.junos.op.phyport.PhyPortTable
+    """
+
     dev = Device(host=args['hostname'])
 
     try:
@@ -78,6 +76,30 @@ def get_interfaces(args):
     dev.close()
 
     return interfaces
+
+def check_interfaces(interfaces):
+    """
+    Iterate over interfaces
+        - If Admin state is "up" and Operational Link is "down"
+        - Description is not None 
+        - Descriptions that do not match the ignore regex
+        - Return an array of what is left
+    """
+
+    # Ignore interface descriptions that match this regex
+    # Currently: Ignore descriptions that start with an underscore
+    ignore_interface = re.compile(r'^_.*$')
+
+    down_interfaces = []
+
+    for interface in interfaces:
+        if interface.admin == 'up' and interface.oper == 'down': 
+            if interface.description == None or ignore_interface.match(interface.description):
+                continue
+            else:
+                down_interfaces.append(interface.key)
+
+    return down_interfaces
     
 if __name__ == "__main__":
     main()
