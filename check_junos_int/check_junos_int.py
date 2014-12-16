@@ -22,7 +22,6 @@ __version__ = "0.1"
 import argparse
 from jnpr.junos import Device
 from jnpr.junos.op.phyport import *
-import pprint
 
 def main():
 
