@@ -29,13 +29,18 @@ def main():
 
     args = process_args()
     interfaces = get_interfaces(args) 
-    down_interfaces = check_interfaces(interfaces)
+    down_interface = check_interfaces(interfaces)
 
-    if down_interfaces:    
+    if down_interface:    
+        # Critical output header
+        print('CRITICAL:')
+        print('Interface\tAdmin\tLink\tDescription')
+
         errout = ''
-        for each in down_interfaces:
-            errout = errout + each + ' '
-        print('CRITICAL: ' + errout)
+        for each in down_interface:
+            errout = errout + each[0] + '\t' + each[1] + '\t' + each[2] + '\t' + each[3] + '\n'
+        print(errout)
+
         exit(2)
         
     else:
@@ -90,16 +95,16 @@ def check_interfaces(interfaces):
     # Currently: Ignore descriptions that start with an underscore
     ignore_interface = re.compile(r'^_.*$')
 
-    down_interfaces = []
+    down_interface = []
 
     for interface in interfaces:
         if interface.admin == 'up' and interface.oper == 'down': 
             if interface.description == None or ignore_interface.match(interface.description):
                 continue
             else:
-                down_interfaces.append(interface.key)
+                down_interface.append([interface.key,interface.admin,interface.oper,interface.description])
 
-    return down_interfaces
+    return down_interface
     
 if __name__ == "__main__":
     main()
