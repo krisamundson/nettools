@@ -23,7 +23,6 @@ import argparse
 from jnpr.junos import Device
 from jnpr.junos.op.phyport import *
 import pprint
-import re
 
 def main():
 
@@ -87,19 +86,15 @@ def check_interfaces(interfaces):
     Iterate over interfaces
         - If Admin state is "up" and Operational Link is "down"
         - Description is not None 
-        - Descriptions that do not match the ignore regex
+        - Descriptions that do not start with '_' (underscore)
         - Return an array of what is left
     """
-
-    # Ignore interface descriptions that match this regex
-    # Currently: Ignore descriptions that start with an underscore
-    ignore_interface = re.compile(r'^_.*$')
 
     down_interfaces = []
 
     for interface in interfaces:
         if interface.admin == 'up' and interface.oper == 'down': 
-            if interface.description == None or ignore_interface.match(interface.description):
+            if interface.description == None or interface.description.startswith('_'):
                 continue
             else:
                 down_interfaces.append([interface.key,interface.admin,interface.oper,interface.description])
