@@ -23,13 +23,14 @@ import argparse
 from jnpr.junos import Device
 from jnpr.junos.op.phyport import *
 
+
 def main():
 
     args = process_args()
-    interfaces = get_interfaces(args) 
+    interfaces = get_interfaces(args)
     down_interfaces = check_interfaces(interfaces)
 
-    if down_interfaces:    
+    if down_interfaces:
         # Critical output header
         print('CRITICAL:')
         print('Interface\tAdmin\tLink\tDescription')
@@ -40,10 +41,11 @@ def main():
         print(errout)
 
         exit(2)
-        
+
     else:
-        print('OK: Interfaces are up.') 
+        print('OK: Interfaces are up.')
         exit(0)
+
 
 def process_args():
     """
@@ -80,11 +82,12 @@ def get_interfaces(args):
 
     return interfaces
 
+
 def check_interfaces(interfaces):
     """
     Iterate over interfaces
         - If Admin state is "up" and Operational Link is "down"
-        - Description is not None 
+        - Description is not None
         - Descriptions that do not start with '_' (underscore)
         - Return an array of what is left
     """
@@ -99,6 +102,7 @@ def check_interfaces(interfaces):
                 down_interfaces.append([interface.key,interface.admin,interface.oper,interface.description])
 
     return down_interfaces
-    
+
+
 if __name__ == "__main__":
     main()
