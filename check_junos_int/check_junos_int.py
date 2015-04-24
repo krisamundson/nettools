@@ -37,7 +37,8 @@ def main():
 
         errout = ''
         for each in down_interfaces:
-            errout = errout + each[0] + '\t' + each[1] + '\t' + each[2] + '\t' + each[3] + '\n'
+            errout = errout + each[0] + '\t' + each[1] + '\t' + each[2] + \
+                '\t' + each[3] + '\n'
         print(errout)
 
         exit(2)
@@ -69,12 +70,15 @@ def get_interfaces(args):
     This uses jnpr.junos.op.phyport.PhyPortTable
     """
 
-    dev = Device(host=args['hostname'])
+    dev = Device(host=args['hostname'], user=args['user'],
+                 ssh_private_key_file=args['sshkey'],
+                 ssh_config=args['sshconfig'])
 
     try:
         dev.open()
     except:
-        print('Unexpected error with NETCONF connection.  Try `ssh ' + args['hostname'] + '`')
+        print('Unexpected error with NETCONF connection.  Try `ssh ' +
+              args['hostname'] + '`')
         exit(3)
 
     interfaces = PhyPortTable(dev).get()
@@ -95,11 +99,13 @@ def check_interfaces(interfaces):
     down_interfaces = []
 
     for interface in interfaces:
-        if interface.admin == 'up' and interface.oper == 'down': 
-            if interface.description == None or interface.description.startswith('_'):
+        if interface.admin == 'up' and interface.oper == 'down':
+            if interface.description is None or \
+                    interface.description.startswith('_'):
                 continue
             else:
-                down_interfaces.append([interface.key,interface.admin,interface.oper,interface.description])
+                down_interfaces.append([interface.key, interface.admin,
+                                        interface.oper, interface.description])
 
     return down_interfaces
 
