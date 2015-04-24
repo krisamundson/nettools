@@ -54,15 +54,24 @@ def process_args():
     Return friendly dict of arguments.
     """
 
-    parser = argparse.ArgumentParser(description='Check interface states on JunOS device.')
-    parser.add_argument('--configfile', help='Alternate SSH user config.', required=False, type=str)
-    parser.add_argument('--hostname', help='Device hostname.', required=True, type=str)
-    parser.add_argument('--user', help='SSH login name.', required=False, type=str)
+    parser = argparse.ArgumentParser(
+        description='Check interface states on JunOS device.')
+    parser.add_argument('--hostname',
+                        help='Device hostname.', required=True, type=str)
+    parser.add_argument('--sshconfig',
+                        help='Alternate SSH config.', required=False, type=str)
+    parser.add_argument('--sshkey',
+                        help='Path to SSH private key.',
+                        required=False, type=str)
+    parser.add_argument('--user',
+                        help='SSH login name.', required=False, type=str)
 
     args = parser.parse_args()
 
     # Return dict of arguments
-    return { 'user': args.user, 'hostname': args.hostname, 'configfile': args.configfile }
+    return {'hostname': args.hostname, 'sshconfig': args.sshconfig,
+            'sshkey': args.sshkey, 'user': args.user}
+
 
 def get_interfaces(args):
     """
