@@ -21,7 +21,7 @@ __version__ = "0.1"
 
 import argparse
 from jnpr.junos import Device
-from jnpr.junos.op.phyport import *
+from jnpr.junos.op.phyport import PhyPortTable
 
 
 def main():
