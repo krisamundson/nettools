@@ -1,1 +1,6 @@
 .ropeproject
+check_dns/lib
+check_dns/include
+check_dns/pip-selfcheck.json
+check_dns/bin
+check_dns/.Python
