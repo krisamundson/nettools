@@ -18,30 +18,50 @@ __copyright__ = "Copyright (C) 2015 Puppet Labs, Inc."
 __version__ = "0.1"
 
 import argparse
-from pprint import pprint
+import datetime
 from jnpr.junos import Device
 from jnpr.junos.op.arp import ArpTable
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-from sqlalchemy import create_engine
+import peewee
 
 # default database file
-DBFILE = 'data.db'
+DB = 'data.db'
+
 
 
 def main():
 
     args = process_args()
 
+    # Define and open sqlite3 database
+    db = peewee.SqliteDatabase(DB)
+    db.connect()
+
+    class Arp(peewee.Model):
+        """
+        Data model for the Arp database.
+        """
+        timestamp = peewee.DateTimeField(default=datetime.datetime.now)
+        hostname = peewee.CharField()
+        interface = peewee.CharField()
+        inet = peewee.CharField()
+        mac = peewee.CharField()
+
+        class Meta:
+            database = db
+
     if args['initdb']:
-        initdb()
+        db.create_tables([Arp])
 
-#    arps = get_arp_table(args)
-#
-#    for x in arps:
-#        pprint(x.values())
+    # Using NETCONF, obtain the arp table.
+    arps = get_arp_table(args)
 
+    for arp_entry in arps:
+        Arp.create(hostname=args['hostname'],
+                   interface=arp_entry.values()[0],
+                   inet=arp_entry.values()[1],
+                   mac=arp_entry.values()[2])
+
+    db.close()
 
 def process_args():
     """
@@ -52,7 +72,7 @@ def process_args():
     parser = argparse.ArgumentParser(
         description='Gather ARP tables from routers and store them in a db.')
     parser.add_argument('--hostname',
-                        help='Device hostname.', required=False, type=str)
+                        help='Device hostname.', required=True, type=str)
     parser.add_argument('--sshconfig',
                         help='Alternate SSH config.', required=False, type=str)
     parser.add_argument('--sshkey',
@@ -69,35 +89,6 @@ def process_args():
     # Return dict of arguments
     return {'hostname': args.hostname, 'sshconfig': args.sshconfig,
             'sshkey': args.sshkey, 'user': args.user, 'initdb': args.initdb}
-
-
-def initdb():
-    """
-    Initialize sqlite3 database.
-    """
-
-    Base = declarative_base()
-
-    class Arps(Base):
-        __tablename__ = 'arps'
-        id = Column(Integer, primary_key=True)
-        # ISO Timestamp: 2015-06-29 23:59:59
-        timestamp = Column(String(19), nullable=False)
-        # L3 Interface: vlan.33 or xe-1/1/1
-        interface = Column(String(20), nullable=False)
-        # IPv4 Address: 192.158.234.234
-        inet = Column(String(15), nullable=False)
-        # MAC Address: 54:e0:32:0e:8d:7d
-        mac = Column(String(17), nullable=False)
-
-    # If open succeeds, exit with error.
-    try:
-        open(DBFILE, 'r')
-        print('Error: Can not initialize, {} exists'.format(DBFILE))
-        exit(1)
-    except IOError:
-        engine = create_engine('sqlite:///' + DBFILE)
-        Base.metadata.create_all(engine)
 
 
 def get_arp_table(args):
