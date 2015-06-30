@@ -3,15 +3,13 @@
 #
 # Copyright 2015 Puppet Labs, Inc.
 #
-# arp_table
+# arpdb
 #
-# The goal with this check script is to care about interfaces with
-# descriptions, ignoring descriptions that start with a defined prefix.
-# All it takes to monitor an important interface is to give it a description.
-# If this interface goes up/down, this script will return CRITICAL and the
-# list of ports in this state.
+# Gather the arp tables from L3 devices, timestamp them and store them in an
+# sqlite3 db.
 #
 # Requirements:
+#   * sqlalchemy module
 #   * py-junos-eznc module
 #   * Enabling the NETCONF protocol on JunOS devices.
 
@@ -23,15 +21,26 @@ import argparse
 from pprint import pprint
 from jnpr.junos import Device
 from jnpr.junos.op.arp import ArpTable
+from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from sqlalchemy import create_engine
+
+# default database file
+DBFILE = 'data.db'
 
 
 def main():
 
     args = process_args()
-    arps = get_arp_table(args)
 
-    for x in arps:
-        pprint(x.values())
+    if args['initdb']:
+        initdb()
+
+#    arps = get_arp_table(args)
+#
+#    for x in arps:
+#        pprint(x.values())
 
 
 def process_args():
@@ -41,9 +50,9 @@ def process_args():
     """
 
     parser = argparse.ArgumentParser(
-        description='Check interface states on JunOS device.')
+        description='Gather ARP tables from routers and store them in a db.')
     parser.add_argument('--hostname',
-                        help='Device hostname.', required=True, type=str)
+                        help='Device hostname.', required=False, type=str)
     parser.add_argument('--sshconfig',
                         help='Alternate SSH config.', required=False, type=str)
     parser.add_argument('--sshkey',
@@ -51,12 +60,44 @@ def process_args():
                         required=False, type=str)
     parser.add_argument('--user',
                         help='SSH login name.', required=False, type=str)
+    parser.add_argument('--initdb',
+                        help='Initialize sqlite3 db.', required=False,
+                        action='store_true')
 
     args = parser.parse_args()
 
     # Return dict of arguments
     return {'hostname': args.hostname, 'sshconfig': args.sshconfig,
-            'sshkey': args.sshkey, 'user': args.user}
+            'sshkey': args.sshkey, 'user': args.user, 'initdb': args.initdb}
+
+
+def initdb():
+    """
+    Initialize sqlite3 database.
+    """
+
+    Base = declarative_base()
+
+    class Arps(Base):
+        __tablename__ = 'arps'
+        id = Column(Integer, primary_key=True)
+        # ISO Timestamp: 2015-06-29 23:59:59
+        timestamp = Column(String(19), nullable=False)
+        # L3 Interface: vlan.33 or xe-1/1/1
+        interface = Column(String(20), nullable=False)
+        # IPv4 Address: 192.158.234.234
+        inet = Column(String(15), nullable=False)
+        # MAC Address: 54:e0:32:0e:8d:7d
+        mac = Column(String(17), nullable=False)
+
+    # If open succeeds, exit with error.
+    try:
+        open(DBFILE, 'r')
+        print('Error: Can not initialize, {} exists'.format(DBFILE))
+        exit(1)
+    except IOError:
+        engine = create_engine('sqlite:///' + DBFILE)
+        Base.metadata.create_all(engine)
 
 
 def get_arp_table(args):
