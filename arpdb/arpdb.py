@@ -27,7 +27,6 @@ import peewee
 DB = 'data.db'
 
 
-
 def main():
 
     args = process_args()
@@ -62,6 +61,7 @@ def main():
                    mac=arp_entry.values()[2])
 
     db.close()
+
 
 def process_args():
     """
