@@ -9,13 +9,17 @@ Manage our Juniper devices.
   * SSH and sudo access to the devices in config.yaml
   * python modules: `pip install fabric`
 
-## config.yaml
+## hosts.yaml
 
-Configuration is provided in a config.yaml file.  Options are:
+Hosts are classified in hosts.yaml:
 
   * **routers**: List of router hostnames.
   * **srx**: List of SRX firewalls.
   * **switches**: List of switches.
+
+## commands.txt
+
+Commands to run on the remote system, one command per line.
 
 ## Usage
 
