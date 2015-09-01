@@ -20,11 +20,7 @@ __copyright__ = "Copyright (C) 2015 Puppet Labs, Inc."
 __version__ = "0.1"
 
 
-# Needed for JunOS
-env.use_shell = False
-
-
-def load_junos_hosts():
+def junos_load_hosts():
     """Load hosts from YAML config file in project dir.
 
     Returns: None
@@ -34,38 +30,52 @@ def load_junos_hosts():
         hosts = yaml.load(config_file)
 
     env.roledefs = {
-        'junos_all': hosts['junos_ex'] + hosts['junos_mx'] + hosts['junos_srx'],
-        'junos_ex': hosts['junos_ex'],
-        'junos_mx': hosts['junos_mx'],
-        'junos_srx': hosts['junos_srx'],
+        'junos_all': hosts['ex'] + hosts['mx'] + hosts['srx'],
+        'junos_ex': hosts['ex'],
+        'junos_mx': hosts['mx'],
+        'junos_srx': hosts['srx'],
     }
 
     return None
 
-load_junos_hosts()
+
+junos_load_hosts()
+
+
+def junos_common():
+    """JunOS-specific for fabric.
+
+    Return: None
+    """
+    env.use_shell = False
+    return None
 
 
 ##
 # Tasks
 #
 @task
-def commit(comment='Commited by fabric.api.'):
+def junos_commit(comment='Commited by fabric.api.'):
+    junos_common()
     run('configure; commit comment "{}"'.format(comment))
 
 
 @task
-def compare():
+def junos_compare():
+    junos_common()
     run('configure; show | compare')
 
 
 @task
-def rollback(level='0'):
+def junos_rollback(level='0'):
+    junos_common()
     """JunOS Rollback Command"""
     run('configure; rollback {}'.format(level))
 
 
 @task
-def configure_commands():
+def junos_configure_commands():
+    junos_common()
     """Run commands from file."""
 
     commands = 'configure'
@@ -81,12 +91,13 @@ def configure_commands():
 
 
 @task
-def show_ntp():
+def junos_show_ntp_associations():
+    junos_common()
     run('show ntp associations')
 
 
 @task
-def show_system_uptime():
+def junos_show_system_uptime():
     run('show system uptime')
 
 
