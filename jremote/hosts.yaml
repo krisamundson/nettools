@@ -8,7 +8,7 @@ ex:
     - pdx-626c2-core.ops.puppetlabs.net
     - pdx-626c3-s1-oob.ops.puppetlabs.net
     - pdx-626c4-s1-oob.ops.puppetlabs.net
-    - pdx-626c4-s2-oob.ops.puppetlabs.net
+    # pdx-626c4-s2-oob.ops.puppetlabs.net
     - pdx-oob.ops.puppetlabs.net
     - pdx-wifi-vc1-oob.ops.puppetlabs.net
     - lhr-cab-core.ops.puppetlabs.net
