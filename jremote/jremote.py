@@ -13,52 +13,63 @@ from fabric.api import run
 from fabric.api import env
 from fabric.network import disconnect_all
 import os
+import sys
+import yaml
 
 __author__ = "Kris Amundson"
 __copyright__ = "Copyright (C) 2015 Puppet Labs, Inc."
 __version__ = "0.1"
 
 
-env.hosts = [
-    'pdx-oob.ops.puppetlabs.net',
-    'pix-jj09c-r1.ops.puppetlabs.net'
-    ]
+# Needed for JunOS
 env.use_shell = False
 
+
 def commit(comment='Commited by fabric.api.'):
-    run('commit comment "{}"'.format(comment))
+    run('configure; commit comment "{}"'.format(comment))
 
 
 def compare():
     run('configure; show | compare')
 
 
-def configure_ntp():
-    configure_cmds = [
-        'delete system ntp',
-        'set system ntp boot-server 10.32.22.9',
-        'set system ntp server 10.32.22.9 version 4',
-        'set system ntp server 10.0.22.10 version 4',
-        'set system ntp server 10.32.44.11 version 4',
-        'set system ntp server 10.0.22.11 version 4',
-        ]
-
-    commands = 'configure'
-
-    for configure_cmd in configure_cmds:
-        commands = '{}; {}'.format(commands, configure_cmd)
-
-    run(commands)
-
 def hosts_from_yaml():
+    pass
+
 
 def rollback(level='0'):
+    """JunOS Rollback Command"""
     run('configure; rollback {}'.format(level))
 
 
+def configure_commands():
+    """Run commands from file."""
+
+    commands = 'configure'
+
+    commands_loc = '{}/commands.txt'.format(os.path.dirname(__file__))
+    with open(commands_loc, 'r') as commands_file:
+        commands_from_file = commands_file.read().splitlines()
+
+    for cmd in commands_from_file:
+        commands = '{}; {}'.format(commands, cmd)
+
+    run(commands)
+
+
+def show_ntp():
+    run('show ntp associations')
+
 def main():
-    """Begins enrollment."""
-    tasks.execute(configure_ntp)
+    """[todo]"""
+
+    hosts_loc = '{}/hosts.yaml'.format(os.path.dirname(__file__))
+    with open(hosts_loc, 'r') as config_file:
+        hosts = yaml.load(config_file)
+
+    env.hosts = hosts['srx'] + hosts['switches'] + hosts['routers']
+
+    tasks.execute(show_ntp)
     disconnect_all()
 
 
