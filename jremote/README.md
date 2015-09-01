@@ -13,13 +13,17 @@ Manage our Juniper devices.
 
 Hosts are classified in hosts.yaml:
 
-  * **routers**: List of router hostnames.
-  * **srx**: List of SRX firewalls.
-  * **switches**: List of switches.
+  * **ex**: List of Juniper EX switches.
+  * **mx**: List of Juniper MX routers.
+  * **srx**: List of Juniper SRX firewalls.
 
-## commands.txt
+## configure_commands.txt
 
-Commands to run on the remote system, one command per line.
+Commands to run on the remote system in configuration mode,
+one command per line.
+
+Typically the last command will be `commit confirmed 5` to
+commit changes with a 5 minute auto-rollback.
 
 ## Usage
 
