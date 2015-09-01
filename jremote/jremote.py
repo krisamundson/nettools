@@ -9,7 +9,7 @@ configuration to Juniper JunOS devices.
 """
 
 from __future__ import print_function
-from fabric.api import env, roles, run, task
+from fabric.api import env, run, task
 import os
 import sys
 import yaml
