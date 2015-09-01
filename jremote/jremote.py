@@ -80,7 +80,7 @@ def junos_configure_commands():
 
     commands = 'configure'
 
-    commands_loc = '{}/commands.txt'.format(os.path.dirname(__file__))
+    commands_loc = '{}/configure_commands.txt'.format(os.path.dirname(__file__))
     with open(commands_loc, 'r') as commands_file:
         commands_from_file = commands_file.read().splitlines()
 
